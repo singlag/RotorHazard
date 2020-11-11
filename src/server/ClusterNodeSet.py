@@ -19,7 +19,7 @@ class SlaveNode:
 
     SPLIT_MODE = 'split'
     MIRROR_MODE = 'mirror'
-    
+
     LATENCY_AVG_SIZE = 30
     TIMEDIFF_MEDIAN_SIZE = 30
     TIMEDIFF_CORRECTION_THRESH_MS = 1000  # correct split times if slave clock more off than this
@@ -259,16 +259,16 @@ class SlaveNode:
 
                 pilot_id = Database.HeatNode.query.filter_by( \
                     heat_id=self.RACE.current_heat, node_index=node_index).one_or_none().pilot_id
-        
-                if pilot_id != Database.PILOT_ID_NONE:
-        
+
+                if pilot_id != RHUtils.PILOT_ID_NONE:
+
                     # convert split timestamp (epoch ms sine 1970-01-01) to equivalent local 'monotonic' time value
                     split_ts = data['timestamp'] - self.RACE.start_time_epoch_ms
-        
+
                     act_laps_list = self.RACE.get_active_laps()[node_index]
                     lap_count = max(0, len(act_laps_list) - 1)
                     split_id = self.id
-        
+
                     # get timestamp for last lap pass (including lap 0)
                     if len(act_laps_list) > 0:
                         last_lap_ts = act_laps_list[-1]['lap_time_stamp']
@@ -288,20 +288,20 @@ class SlaveNode:
                     else:
                         logger.info('Ignoring split {0} before zero lap for node {1}'.format(split_id+1, node_index+1))
                         last_split_ts = None
-        
+
                     if last_split_ts is not None:
-        
+
                         # if slave-timer clock was detected as not synchronized then apply correction
                         if self.timeCorrectionMs != 0:
                             split_ts -= self.timeCorrectionMs
-                            
+
                         split_time = split_ts - last_split_ts
                         split_speed = float(self.info['distance'])*1000.0/float(split_time) if 'distance' in self.info else None
                         split_time_str = RHUtils.time_format(split_time)
                         logger.debug('Split pass record: Node {0}, lap {1}, split {2}, time={3}, speed={4}' \
                             .format(node_index+1, lap_count+1, split_id+1, split_time_str, \
                             ('{0:.2f}'.format(split_speed) if split_speed is not None else 'None')))
-        
+
                         self.DB.session.add(Database.LapSplit(node_index=node_index, pilot_id=pilot_id, lap_id=lap_count, \
                                 split_id=split_id, split_time_stamp=split_ts, split_time=split_time, \
                                 split_time_formatted=split_time_str, split_speed=split_speed))
@@ -397,7 +397,7 @@ class ClusterNodeSet:
 
     def hasRecEventsSlaves(self):
         return (len(self.recEventsSlaves) > 0)
-    
+
     # return True if slave is 'split' mode and is or has been connected
     def isSplitSlaveAvailable(self, slave_index):
         return (slave_index < len(self.slaves)) and \
