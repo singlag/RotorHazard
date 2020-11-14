@@ -591,6 +591,7 @@ def on_get_timestamp():
         now = RACE.start_time_monotonic
     else:
         now = monotonic()
+    logger.debug('Sent Timestamp: {0}'.format(monotonic_to_epoch_millis(now)))
     return {'timestamp': monotonic_to_epoch_millis(now)}
 
 @SOCKET_IO.on('get_settings')
